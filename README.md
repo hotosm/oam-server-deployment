@@ -1,6 +1,6 @@
-# Amazon Web Services Deployment
+# oam-server-deployment
 
-Deployment is driven by [Troposphere](https://github.com/cloudtools/troposphere) and [Boto](http://boto.readthedocs.org/en/latest/).
+Amazon Web Services deployment is driven by [Troposphere](https://github.com/cloudtools/troposphere) and [Boto](http://boto.readthedocs.org/en/latest/).
 
 ## Dependencies
 
