@@ -1,0 +1,21 @@
+#cloud-config
+
+coreos:
+  update:
+    reboot-strategy: off
+  units:
+    - name: oam-server-decider.service
+      command: start
+      content: |
+        [Unit]
+        Description=OpenAerialMap Server Decider
+        After=docker.service
+
+        [Service]
+        Restart=always
+
+        ExecStartPre=-/usr/bin/docker kill oam-server-decider
+        ExecStartPre=-/usr/bin/docker rm -f oam-server-decider
+        ExecStartPre=/usr/bin/docker pull quay.io/hotosm/oam-server-decider:latest
+        ExecStart=/usr/bin/docker run --name oam-server-decider quay.io/hotosm/oam-server-decider:latest start
+        ExecStop=/usr/bin/docker stop -t 2 oam-server-decider

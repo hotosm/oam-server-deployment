@@ -1,4 +1,4 @@
-# oam-server-deployment
+# OpenAerialMap Server: Deployment
 
 Amazon Web Services deployment is driven by [Troposphere](https://github.com/cloudtools/troposphere) and [Boto](http://boto.readthedocs.org/en/latest/).
 
@@ -24,7 +24,7 @@ After the dependencies are installed, use the included `Makefile` to emit CloudF
 ```
 $ make
 Template validated and written to cfn/swf_stack.json
-Template validated and written to cfn/tiler_api_stack.json
+Template validated and written to cfn/api_stack.json
 Template validated and written to cfn/vpc_stack.json
 ```
 

@@ -49,10 +49,10 @@ coreos_ami_param = t.add_parameter(Parameter(
     Description='CoreOS AMI'
 ))
 
-# decider_instance_profile_param = t.add_parameter(Parameter(
-    # 'DeciderInstanceProfile', Type='String',
-    # Description='Physical resource ID of an AWS::IAM::Role for decider'
-# ))
+decider_instance_profile_param = t.add_parameter(Parameter(
+    'DeciderInstanceProfile', Type='String', Default='DeciderInstanceProfile',
+    Description='Physical resource ID of an AWS::IAM::Role for decider'
+))
 
 decider_instance_type_param = t.add_parameter(Parameter(
     'DeciderInstanceType', Type='String', Default='t2.micro',
@@ -62,10 +62,11 @@ decider_instance_type_param = t.add_parameter(Parameter(
 ))
 
 
-# activity_worker_instance_profile_param = t.add_parameter(Parameter(
-    # 'ActivityWorkerInstanceProfile', Type='String',
-    # Description='Physical resource ID of an AWS::IAM::Role for activity worker'
-# ))
+activity_worker_instance_profile_param = t.add_parameter(Parameter(
+    'ActivityWorkerInstanceProfile', Type='String',
+    Default='ActivityWorkerInstanceProfile',
+    Description='Physical resource ID of an AWS::IAM::Role for activity worker'
+))
 
 activity_worker_instance_type_param = t.add_parameter(Parameter(
     'ActivityWorkerInstanceType', Type='String', Default='t2.micro',
@@ -139,11 +140,11 @@ activity_worker_security_group = t.add_resource(ec2.SecurityGroup(
 decider_launch_config = t.add_resource(asg.LaunchConfiguration(
     'lcDecider',
     ImageId=Ref(coreos_ami_param),
-    # IamInstanceProfile=Ref(decider_instance_profile_param),
+    IamInstanceProfile=Ref(decider_instance_profile_param),
     InstanceType=Ref(decider_instance_type_param),
     KeyName=Ref(keyname_param),
     SecurityGroups=[Ref(decider_security_group)],
-    UserData=Base64(read_file('cloud-config/oam-decider.yml'))
+    UserData=Base64(read_file('cloud-config/oam-server-decider.yml'))
 ))
 
 decider_auto_scaling_group = t.add_resource(asg.AutoScalingGroup(
@@ -172,11 +173,11 @@ decider_auto_scaling_group = t.add_resource(asg.AutoScalingGroup(
 activity_worker_launch_config = t.add_resource(asg.LaunchConfiguration(
     'lcActivityWorker',
     ImageId=Ref(coreos_ami_param),
-    # IamInstanceProfile=Ref(activity_worker_instance_profile_param),
+    IamInstanceProfile=Ref(activity_worker_instance_profile_param),
     InstanceType=Ref(activity_worker_instance_type_param),
     KeyName=Ref(keyname_param),
     SecurityGroups=[Ref(activity_worker_security_group)],
-    UserData=Base64(read_file('cloud-config/oam-activity-worker.yml'))
+    UserData=Base64(read_file('cloud-config/oam-server-activities.yml'))
 ))
 
 decider_auto_scaling_group = t.add_resource(asg.AutoScalingGroup(

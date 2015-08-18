@@ -29,7 +29,7 @@ import troposphere.cloudwatch as cw
 t = Template()
 
 t.add_version('2010-09-09')
-t.add_description('OpenAerialMap tiler API stack')
+t.add_description('OpenAerialMap API stack')
 
 #
 # Parameters
@@ -48,19 +48,19 @@ notification_arn_param = t.add_parameter(Parameter(
     Description='Physical resource ID of an AWS::SNS::Topic for notifications'
 ))
 
-tiler_ami_param = t.add_parameter(Parameter(
+api_ami_param = t.add_parameter(Parameter(
     'CoreOSAMI', Type='String', Default='ami-85ada4b5',
     Description='CoreOS AMI'
 ))
 
-# tiler_instance_profile_param = t.add_parameter(Parameter(
-    # 'TilerInstanceProfile', Type='String',
-    # Description='Physical resource ID of an AWS::IAM::Role for tiler'
-# ))
+api_instance_profile_param = t.add_parameter(Parameter(
+    'APIInstanceProfile', Type='String', Default='APIInstanceProfile',
+    Description='Physical resource ID of an AWS::IAM::Role for API'
+))
 
-tiler_instance_type_param = t.add_parameter(Parameter(
-    'TilerInstanceType', Type='String', Default='t2.micro',
-    Description='Tiler EC2 instance type',
+api_instance_type_param = t.add_parameter(Parameter(
+    'APIInstanceType', Type='String', Default='t2.micro',
+    Description='API EC2 instance type',
     AllowedValues=EC2_INSTANCE_TYPES,
     ConstraintDescription='must be a valid EC2 instance type.'
 ))
@@ -84,10 +84,10 @@ availability_zones_param = t.add_parameter(Parameter(
 #
 # Security Group Resources
 #
-tiler_load_balancer_security_group_name = 'sgTilerLoadBalancer'
-tiler_load_balancer_security_group = t.add_resource(ec2.SecurityGroup(
-    tiler_load_balancer_security_group_name,
-    GroupDescription='Enables access to tiler API servers via a load balancer',
+api_load_balancer_security_group_name = 'sgAPILoadBalancer'
+api_load_balancer_security_group = t.add_resource(ec2.SecurityGroup(
+    api_load_balancer_security_group_name,
+    GroupDescription='Enables access to API servers via a load balancer',
     VpcId=Ref(vpc_param),
     SecurityGroupIngress=[
         ec2.SecurityGroupRule(
@@ -101,13 +101,13 @@ tiler_load_balancer_security_group = t.add_resource(ec2.SecurityGroup(
         )
         for p in [HTTP]
     ],
-    Tags=Tags(Name=tiler_load_balancer_security_group_name)
+    Tags=Tags(Name=api_load_balancer_security_group_name)
 ))
 
-tiler_security_group_name = 'sgTiler'
-tiler_security_group = t.add_resource(ec2.SecurityGroup(
-    tiler_security_group_name,
-    GroupDescription='Enables access to tiler API servers',
+api_security_group_name = 'sgAPI'
+api_security_group = t.add_resource(ec2.SecurityGroup(
+    api_security_group_name,
+    GroupDescription='Enables access to API servers',
     VpcId=Ref(vpc_param),
     SecurityGroupIngress=[
         ec2.SecurityGroupRule(
@@ -119,7 +119,7 @@ tiler_security_group = t.add_resource(ec2.SecurityGroup(
             IpProtocol='tcp', SourceSecurityGroupId=Ref(sg),
             FromPort=HTTP, ToPort=HTTP
         )
-        for sg in [tiler_load_balancer_security_group]
+        for sg in [api_load_balancer_security_group]
     ],
     SecurityGroupEgress=[
         ec2.SecurityGroupRule(
@@ -127,21 +127,21 @@ tiler_security_group = t.add_resource(ec2.SecurityGroup(
         )
         for p in [HTTP, HTTPS]
     ],
-    Tags=Tags(Name=tiler_security_group_name)
+    Tags=Tags(Name=api_security_group_name)
 ))
 
 #
 # ELB Resources
 #
-tiler_load_balancer_name = 'elbTiler'
-tiler_load_balancer = t.add_resource(elb.LoadBalancer(
-    tiler_load_balancer_name,
+api_load_balancer_name = 'elbAPI'
+api_load_balancer = t.add_resource(elb.LoadBalancer(
+    api_load_balancer_name,
     ConnectionDrainingPolicy=elb.ConnectionDrainingPolicy(
         Enabled=True,
         Timeout=300,
     ),
     CrossZone=True,
-    SecurityGroups=[Ref(tiler_load_balancer_security_group)],
+    SecurityGroups=[Ref(api_load_balancer_security_group)],
     Listeners=[
         elb.Listener(
             LoadBalancerPort=str(HTTP),
@@ -157,31 +157,31 @@ tiler_load_balancer = t.add_resource(elb.LoadBalancer(
         Timeout='5',
     ),
     Subnets=Ref(public_subnets_param),
-    Tags=Tags(Name=tiler_load_balancer_name)
+    Tags=Tags(Name=api_load_balancer_name)
 ))
 
 #
 # Auto Scaling Group Resources
 #
-tiler_launch_config = t.add_resource(asg.LaunchConfiguration(
-    'lcTiler',
-    ImageId=Ref(tiler_ami_param),
-    # IamInstanceProfile=Ref(tiler_instance_profile_param),
-    InstanceType=Ref(tiler_instance_type_param),
+api_launch_config = t.add_resource(asg.LaunchConfiguration(
+    'lcAPI',
+    ImageId=Ref(api_ami_param),
+    IamInstanceProfile=Ref(api_instance_profile_param),
+    InstanceType=Ref(api_instance_type_param),
     KeyName=Ref(keyname_param),
-    SecurityGroups=[Ref(tiler_security_group)],
-    UserData=Base64(read_file('cloud-config/oam-tiler-api.yml'))
+    SecurityGroups=[Ref(api_security_group)],
+    UserData=Base64(read_file('cloud-config/oam-server-api.yml'))
 ))
 
-tiler_auto_scaling_group = t.add_resource(asg.AutoScalingGroup(
-    'asgTiler',
+api_auto_scaling_group = t.add_resource(asg.AutoScalingGroup(
+    'asgAPI',
     AvailabilityZones=Ref(availability_zones_param),
     Cooldown=300,
     DesiredCapacity=1,
     HealthCheckGracePeriod=600,
     HealthCheckType='ELB',
-    LaunchConfigurationName=Ref(tiler_launch_config),
-    LoadBalancerNames=[Ref(tiler_load_balancer)],
+    LaunchConfigurationName=Ref(api_launch_config),
+    LoadBalancerNames=[Ref(api_load_balancer)],
     MaxSize=10,
     MinSize=1,
     NotificationConfigurations=[asg.NotificationConfigurations(
@@ -194,15 +194,15 @@ tiler_auto_scaling_group = t.add_resource(asg.AutoScalingGroup(
         ]
     )],
     VPCZoneIdentifier=Ref(private_subnets_param),
-    Tags=[asg.Tag('Name', 'Tiler', True)]
+    Tags=[asg.Tag('Name', 'API', True)]
 ))
 
 #
 # CloudWatch Resources
 #
 t.add_resource(cw.Alarm(
-    'alarmTilerBackend4XX',
-    AlarmDescription='Tiler API server backend 4XXs',
+    'alarmAPIBackend4XX',
+    AlarmDescription='API server backend 4XXs',
     AlarmActions=[Ref(notification_arn_param)],
     Statistic='Sum',
     Period=300,
@@ -215,14 +215,14 @@ t.add_resource(cw.Alarm(
         cw.MetricDimension(
             'metricLoadBalancerName',
             Name='LoadBalancerName',
-            Value=Ref(tiler_load_balancer)
+            Value=Ref(api_load_balancer)
         )
     ],
 ))
 
 t.add_resource(cw.Alarm(
-    'alarmTilerBackend5XX',
-    AlarmDescription='Tiler API server backend 5XXs',
+    'alarmAPIBackend5XX',
+    AlarmDescription='API server backend 5XXs',
     AlarmActions=[Ref(notification_arn_param)],
     Statistic='Sum',
     Period=60,
@@ -235,7 +235,7 @@ t.add_resource(cw.Alarm(
         cw.MetricDimension(
             'metricLoadBalancerName',
             Name='LoadBalancerName',
-            Value=Ref(tiler_load_balancer)
+            Value=Ref(api_load_balancer)
         )
     ],
 ))
@@ -244,9 +244,9 @@ t.add_resource(cw.Alarm(
 # Outputs
 #
 t.add_output([
-    Output('ServerLoadBalancerEndpoint',
-           Description='Server load balancer server endpoint',
-           Value=GetAtt(tiler_load_balancer, 'DNSName'))
+    Output('APIServerLoadBalancerEndpoint',
+           Description='API server load balancer server endpoint',
+           Value=GetAtt(api_load_balancer, 'DNSName'))
 ])
 
 if __name__ == '__main__':

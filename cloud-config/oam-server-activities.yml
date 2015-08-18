@@ -1,0 +1,21 @@
+#cloud-config
+
+coreos:
+  update:
+    reboot-strategy: off
+  units:
+    - name: oam-server-activities.service
+      command: start
+      content: |
+        [Unit]
+        Description=OpenAerialMap Server Activities
+        After=docker.service
+
+        [Service]
+        Restart=always
+
+        ExecStartPre=-/usr/bin/docker kill oam-server-activities
+        ExecStartPre=-/usr/bin/docker rm -f oam-server-activities
+        ExecStartPre=/usr/bin/docker pull quay.io/hotosm/oam-server-activities:latest
+        ExecStart=/usr/bin/docker run --name oam-server-activities quay.io/hotosm/oam-server-activities:latest start
+        ExecStop=/usr/bin/docker stop -t 2 oam-server-activities
