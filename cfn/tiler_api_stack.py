@@ -170,7 +170,7 @@ tiler_launch_config = t.add_resource(asg.LaunchConfiguration(
     InstanceType=Ref(tiler_instance_type_param),
     KeyName=Ref(keyname_param),
     SecurityGroups=[Ref(tiler_security_group)],
-    UserData=Base64(read_file('cloud-config/oam-tiler-api.yml'))
+    UserData=Base64(read_file('cloud-config/oam-server-api.yml'))
 ))
 
 tiler_auto_scaling_group = t.add_resource(asg.AutoScalingGroup(
