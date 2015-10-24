@@ -40,7 +40,7 @@ keyname_param = t.add_parameter(Parameter(
 ))
 
 tiler_ami_param = t.add_parameter(Parameter(
-    'CoreOSAMI', Type='String', Default='ami-85ada4b5',
+    'CoreOSAMI', Type='String', Default='ami-05783d60',
     Description='CoreOS AMI'
 ))
 
