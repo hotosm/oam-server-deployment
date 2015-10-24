@@ -4,6 +4,21 @@ coreos:
   update:
     reboot-strategy: off
   units:
+    - name: cfn-signal.service
+      command: start
+      content: |
+        [Unit]
+        Description=CloudFormation signaler
+        After=docker.service
+
+        [Service]
+        ExecStart=/usr/bin/docker run \
+          --rm \
+          quay.io/mojodna/awscli \
+          cfn-signal \
+            --stack {aws_stack_name} \
+            --resource WebServerInstance \
+            --region {aws_region}
     - name: oam-server-api.service
       command: start
       content: |
@@ -15,9 +30,31 @@ coreos:
         Restart=always
 
         ExecStartPre=-/usr/bin/docker kill oam-server-api
-        ExecStart=/usr/bin/docker run --rm --name oam-server-api -p 80:8000 quay.io/hotosm/oam-server-api:v0.1.0
+        ExecStart=/usr/bin/docker run \
+          --rm \
+          --name oam-server-api \
+          -p 80:8000 \
+          -e 'AWS_DEFAULT_REGION={aws_region}' \
+          -e 'OAM_SMALL_CLUSTER_SIZE={small_cluster_size}' \
+          -e 'OAM_MED_CLUSTER_SIZE={medium_cluster_size}' \
+          -e 'OAM_LARGE_CLUSTER_SIZE={large_cluster_size}' \
+          -e 'OAM_SMALL_IMAGE_COUNT={small_image_count}' \
+          -e 'OAM_MED_IMAGE_COUNT={medium_image_count}' \
+          -e 'OAM_EMR_KEYNAME={keyname}' \
+          -e 'OAM_EMR_MASTER_INSTANCE_TYPE={emr_master_instance_type}' \
+          -e 'OAM_EMR_CORE_CLUSTER_SIZE={emr_core_cluster_size}' \
+          -e 'OAM_EMR_CORE_INSTANCE_TYPE={emr_core_instance_type}' \
+          -e 'OAM_EMR_TASK_INSTANCE_TYPE={emr_task_instance_type}' \
+          -e 'OAM_EMR_TASK_INSTANCE_BIDPRICE={emr_task_bid_price}' \
+          -e 'OAM_TILER_TOKEN_BUCKET={auth_token_bucket}' \
+          -e 'OAM_TILER_TOKEN_KEY={auth_token_key}' \
+          -e 'OAM_STATUS_BUCKET={status_bucket}' \
+          -e 'OAM_STATUS_PREFIX={status_prefix}' \
+          quay.io/hotosm/oam-server-api:{server_api_version}
         ExecStop=/usr/bin/docker stop -t 2 oam-server-api
-
+    - name: oam-server-publisher.service
+      command: start
+      content: |
         [Unit]
         Description=OpenAerialMap Server Status Publisher
         After=docker.service
@@ -26,5 +63,13 @@ coreos:
         Restart=always
 
         ExecStartPre=-/usr/bin/docker kill oam-server-publisher
-        ExecStart=/usr/bin/docker run --rm --name oam-server-publisher quay.io/hotosm/oam-server-publisher:v0.1.0
+        ExecStart=/usr/bin/docker run \
+          --rm \
+          --name oam-server-publisher \
+          -e 'AWS_DEFAULT_REGION={aws_region}' \
+          -e 'OAM_STATUS_SQS_QUEUE_URL={status_sqs_queue_url}' \
+          -e 'OAM_API_TOKEN={oam_api_token}' \
+          -e 'OAM_STATUS_BUCKET={status_bucket}' \
+          -e 'OAM_STATUS_PREFIX={status_prefix}' \
+          quay.io/hotosm/oam-server-api:{publisher_version}
         ExecStop=/usr/bin/docker stop -t 2 oam-server-publisher
