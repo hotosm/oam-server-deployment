@@ -34,6 +34,7 @@ coreos:
           --rm \
           --name oam-server-api \
           -p 80:8000 \
+          -e 'NODE_ENV=production' \
           -e 'AWS_DEFAULT_REGION={aws_region}' \
           -e 'OAM_SMALL_CLUSTER_SIZE={small_cluster_size}' \
           -e 'OAM_MED_CLUSTER_SIZE={medium_cluster_size}' \
