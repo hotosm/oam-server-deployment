@@ -13,5 +13,5 @@ npm_modules/*
 .DS_Store
 
 # Deployment
-deployment/cfn/*.json
+cfn/*.json
 *.pyc
