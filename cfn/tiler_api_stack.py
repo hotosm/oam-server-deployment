@@ -14,9 +14,7 @@ from troposphere import (
 from utils.cfn import read_file, validate_cloudformation_template
 from utils.constants import (
     ALLOW_ALL_CIDR,
-    EC2_AVAILABILITY_ZONES,
     EMR_EC2_INSTANCE_TYPES,
-    VPC_CIDR,
 )
 
 import troposphere.ec2 as ec2
@@ -189,7 +187,7 @@ route = t.add_resource(
         'Route',
         DependsOn='AttachGateway',
         GatewayId=Ref('InternetGateway'),
-        DestinationCidrBlock='0.0.0.0/0',
+        DestinationCidrBlock=ALLOW_ALL_CIDR,
         RouteTableId=Ref(routeTable),
     ))
 
@@ -217,7 +215,7 @@ inBoundPrivateNetworkAclEntry = t.add_resource(
         PortRange=ec2.PortRange(To='80', From='80'),
         Egress='false',
         RuleAction='allow',
-        CidrBlock='0.0.0.0/0',
+        CidrBlock=ALLOW_ALL_CIDR,
     ))
 
 inboundSSHNetworkAclEntry = t.add_resource(
@@ -229,7 +227,7 @@ inboundSSHNetworkAclEntry = t.add_resource(
         PortRange=ec2.PortRange(To='22', From='22'),
         Egress='false',
         RuleAction='allow',
-        CidrBlock='0.0.0.0/0',
+        CidrBlock=ALLOW_ALL_CIDR,
     ))
 
 inboundResponsePortsNetworkAclEntry = t.add_resource(
@@ -241,7 +239,7 @@ inboundResponsePortsNetworkAclEntry = t.add_resource(
         PortRange=ec2.PortRange(To='65535', From='1024'),
         Egress='false',
         RuleAction='allow',
-        CidrBlock='0.0.0.0/0',
+        CidrBlock=ALLOW_ALL_CIDR,
     ))
 
 outBoundHTTPNetworkAclEntry = t.add_resource(
@@ -253,7 +251,7 @@ outBoundHTTPNetworkAclEntry = t.add_resource(
         PortRange=ec2.PortRange(To='80', From='80'),
         Egress='true',
         RuleAction='allow',
-        CidrBlock='0.0.0.0/0',
+        CidrBlock=ALLOW_ALL_CIDR,
     ))
 
 outBoundHTTPSNetworkAclEntry = t.add_resource(
@@ -265,7 +263,7 @@ outBoundHTTPSNetworkAclEntry = t.add_resource(
         PortRange=ec2.PortRange(To='443', From='443'),
         Egress='true',
         RuleAction='allow',
-        CidrBlock='0.0.0.0/0',
+        CidrBlock=ALLOW_ALL_CIDR,
     ))
 
 outBoundResponsePortsNetworkAclEntry = t.add_resource(
@@ -277,7 +275,7 @@ outBoundResponsePortsNetworkAclEntry = t.add_resource(
         PortRange=ec2.PortRange(To='65535', From='1024'),
         Egress='true',
         RuleAction='allow',
-        CidrBlock='0.0.0.0/0',
+        CidrBlock=ALLOW_ALL_CIDR,
     ))
 
 subnetNetworkAclAssociation = t.add_resource(
@@ -296,12 +294,12 @@ instanceSecurityGroup = t.add_resource(
                 IpProtocol='tcp',
                 FromPort='22',
                 ToPort='22',
-                CidrIp='0.0.0.0/0'),
+                CidrIp=ALLOW_ALL_CIDR),
             ec2.SecurityGroupRule(
                 IpProtocol='tcp',
                 FromPort='80',
                 ToPort='80',
-                CidrIp='0.0.0.0/0')],
+                CidrIp=ALLOW_ALL_CIDR)],
         VpcId=Ref(VPC),
     ))
 
