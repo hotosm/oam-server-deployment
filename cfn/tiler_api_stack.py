@@ -1,6 +1,9 @@
+import json
+
 from troposphere import (
     Base64,
     GetAtt,
+    Join,
     Output,
     Parameter,
     Ref,
@@ -295,7 +298,7 @@ instanceSecurityGroup = t.add_resource(
 # Instance
 #
 
-user_data = read_file('cloud-config/oam-server-api.yml').format(
+refs = dict(
     aws_stack_name=Ref('AWS::StackName'),
     aws_region=Ref('AWS::Region'),
     keyname=Ref(keyname_param),
@@ -315,9 +318,18 @@ user_data = read_file('cloud-config/oam-server-api.yml').format(
     auth_token_key=Ref(auth_token_key_param),
     status_bucket=Ref(status_bucket_param),
     status_prefix=Ref(status_prefix_param),
-    status_sqs_queue_url="TODO",
+    status_sqs_queue_url=Ref(status_prefix_param), # TODO
     oam_api_token=Ref(oam_api_token_param),
 )
+
+# convert to JSON representations
+refs = dict([(k, '|||' + json.dumps(v.JSONrepr()) + '|||') for (k, v) in refs.items()])
+
+# interpolate and split into an array
+user_data = read_file('cloud-config/oam-server-api.yml').format(**refs).split('|||')
+
+# replace stringified refs with objects
+user_data = map(lambda x: json.loads(x) if x.startswith('{"Ref": "') else x, user_data)
 
 instance = t.add_resource(
     ec2.Instance(
@@ -333,7 +345,7 @@ instance = t.add_resource(
                 DeviceIndex='0',
                 DeleteOnTermination='true',
                 SubnetId=Ref(subnet))],
-        UserData=Base64(user_data),
+        UserData=Base64(Join('', user_data)),
         CreationPolicy=policies.CreationPolicy(
             ResourceSignal=policies.ResourceSignal(
                 Timeout='PT15M')),
