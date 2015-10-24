@@ -6,7 +6,7 @@ all: $(CFN_JSON_FILES)
 clean:
 	rm -f cfn/*.json
 
-cfn/%.json: cfn/%.py
+cfn/%.json: cfn/%.py cloud-config/*.yml
 	python $<
 
 .PHONY: all clean
