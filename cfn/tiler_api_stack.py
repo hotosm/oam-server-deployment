@@ -158,6 +158,7 @@ VPC = t.add_resource(
 subnet = t.add_resource(
     ec2.Subnet(
         'Subnet',
+        AvailabilityZone='us-east-1a',
         CidrBlock='10.0.0.0/24',
         VpcId=Ref(VPC),
         Tags=Tags(
@@ -366,6 +367,7 @@ instance = t.add_resource(
             ResourceSignal=policies.ResourceSignal(
                 Timeout='PT15M')),
         Tags=Tags(
+            Name='oam-server',
             Application=ref_stack_id),
     ))
 
