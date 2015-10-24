@@ -71,5 +71,5 @@ coreos:
           -e 'OAM_API_TOKEN={oam_api_token}' \
           -e 'OAM_STATUS_BUCKET={status_bucket}' \
           -e 'OAM_STATUS_PREFIX={status_prefix}' \
-          quay.io/hotosm/oam-server-api:{publisher_version}
+          quay.io/hotosm/oam-server-publisher:{publisher_version}
         ExecStop=/usr/bin/docker stop -t 2 oam-server-publisher
