@@ -130,6 +130,11 @@ status_prefix_param = t.add_parameter(Parameter(
     Description='S3 key prefix for task statuses'
 ))
 
+status_sqs_queue_url_param = t.add_parameter(Parameter(
+    'StatusSQSQueueURL', Type='String',
+    Description='SQS queue URL for status updates'
+))
+
 oam_api_token_param = t.add_parameter(Parameter(
     'OAMAPIToken', Type='String',
     Description='OAM API Token'
@@ -318,7 +323,7 @@ refs = dict(
     auth_token_key=Ref(auth_token_key_param),
     status_bucket=Ref(status_bucket_param),
     status_prefix=Ref(status_prefix_param),
-    status_sqs_queue_url=Ref(status_prefix_param), # TODO
+    status_sqs_queue_url=Ref(status_sqs_queue_url_param),
     oam_api_token=Ref(oam_api_token_param),
 )
 
