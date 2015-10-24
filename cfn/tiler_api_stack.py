@@ -158,6 +158,7 @@ VPC = t.add_resource(
 subnet = t.add_resource(
     ec2.Subnet(
         'Subnet',
+        AvailabilityZone='us-east-1a',
         CidrBlock='10.0.0.0/24',
         VpcId=Ref(VPC),
         Tags=Tags(
