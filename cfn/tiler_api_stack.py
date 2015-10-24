@@ -20,6 +20,7 @@ from utils.constants import (
 )
 
 import troposphere.ec2 as ec2
+import troposphere.iam as iam
 import troposphere.policies as policies
 
 t = Template()
@@ -37,6 +38,11 @@ ref_stack_name = Ref('AWS::StackName')
 keyname_param = t.add_parameter(Parameter(
     'KeyName', Type='AWS::EC2::KeyPair::KeyName', Default='hotosm',
     Description='Name of an existing EC2 key pair'
+))
+
+role_param = t.add_parameter(Parameter(
+    'Role', Type='String', Default='OAMServer',
+    Description='IAM Instance Role'
 ))
 
 tiler_ami_param = t.add_parameter(Parameter(
@@ -336,9 +342,16 @@ user_data = read_file('cloud-config/oam-server-api.yml').format(**refs).split('|
 # replace stringified refs with objects
 user_data = map(lambda x: json.loads(x) if x.startswith('{"Ref": "') else x, user_data)
 
+instance_profile = t.add_resource(iam.InstanceProfile(
+    'InstanceProfile',
+    Path='/',
+    Roles=[Ref(role_param)]
+))
+
 instance = t.add_resource(
     ec2.Instance(
         'WebServerInstance',
+        IamInstanceProfile=Ref(instance_profile),
         ImageId=Ref(tiler_ami_param),
         InstanceType='t2.medium',
         KeyName=Ref(keyname_param),
