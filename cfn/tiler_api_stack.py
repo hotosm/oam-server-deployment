@@ -367,6 +367,7 @@ instance = t.add_resource(
             ResourceSignal=policies.ResourceSignal(
                 Timeout='PT15M')),
         Tags=Tags(
+            Name='oam-server',
             Application=ref_stack_id),
     ))
 
