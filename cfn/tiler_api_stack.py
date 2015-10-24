@@ -43,6 +43,11 @@ role_param = t.add_parameter(Parameter(
     Description='IAM Instance Role'
 ))
 
+target_bucket_param = t.add_parameter(Parameter(
+    'TargetBucket', Type='String', Default='oam-tiles',
+    Description='Target S3 bucket for tiled imagery'
+))
+
 tiler_ami_param = t.add_parameter(Parameter(
     'CoreOSAMI', Type='String', Default='ami-05783d60',
     Description='CoreOS AMI'
@@ -330,6 +335,7 @@ refs = dict(
     status_prefix=Ref(status_prefix_param),
     status_sqs_queue_url=Ref(status_sqs_queue_url_param),
     oam_api_token=Ref(oam_api_token_param),
+    target_bucket=Ref(target_bucket_param),
 )
 
 # convert to JSON representations
