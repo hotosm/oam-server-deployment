@@ -12,6 +12,7 @@ coreos:
         After=docker.service
 
         [Service]
+        Type=oneshot
         ExecStart=/usr/bin/docker run \
           --rm \
           quay.io/mojodna/awscli \
